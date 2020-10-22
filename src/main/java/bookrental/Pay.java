@@ -12,6 +12,7 @@ public class Pay {
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long id;
     private String status;
+    private Long askId;
     private Long bookId;
     private String payDate;
     private String payCancelDate;
@@ -19,20 +20,34 @@ public class Pay {
 
     @PostPersist
     public void onPostPersist(){
-        Paid paid = new Paid();
-        BeanUtils.copyProperties(this, paid);
-        paid.publishAfterCommit();
+        System.out.println("##### onPostPersist status = " + this.getStatus());
 
+        try {
+            Thread.currentThread().sleep((long) (400 + Math.random() * 220));
+            System.out.println("##### SLEEP2");
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        if (this.getStatus().equals("ASKED") || this.getStatus().equals("PAID")) {
+            Paid paid = new Paid();
+            BeanUtils.copyProperties(this, paid);
+            paid.setStatus("PAID");
+            paid.publishAfterCommit();
+        }
 
     }
 
     @PostUpdate
     public void onPostUpdate(){
-        PayCanceled payCanceled = new PayCanceled();
-        BeanUtils.copyProperties(this, payCanceled);
-        payCanceled.publishAfterCommit();
-
-
+        System.out.println("##### onPreUpdate status = " + this.getStatus());
+        if (this.getStatus().equals("ASK_CANCELED") || this.getStatus().equals("PAY_CANCELED")) {
+            PayCanceled payCanceled = new PayCanceled();
+            BeanUtils.copyProperties(this, payCanceled);
+            payCanceled.setStatus("PAY_CANCELED");
+            payCanceled.publishAfterCommit();
+        }
     }
 
 
@@ -56,6 +71,13 @@ public class Pay {
 
     public void setBookId(Long bookId) {
         this.bookId = bookId;
+    }
+    public Long getAskId() {
+        return askId;
+    }
+
+    public void setAskId(Long askId) {
+        this.askId = askId;
     }
     public String getPayDate() {
         return payDate;
